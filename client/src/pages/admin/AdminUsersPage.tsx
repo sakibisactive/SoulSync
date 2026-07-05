@@ -393,7 +393,7 @@ export const AdminUsersPage: React.FC = () => {
 
                 {/* Hobbies */}
                 <div>
-                  <span className="font-bold text-white block mb-2">Selected World Hobbies:</span>
+                  <span className="font-bold text-white block mb-2">Selected Hobbies:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {detailData.profile?.interests?.map((item: any) => (
                       <span

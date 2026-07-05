@@ -28,7 +28,7 @@ export const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-indigo-500/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider"
           >
-            <Sparkles className="w-4 h-4 text-rose-400" /> AI-Powered 5D Compatibility & World Hobbies Matching
+            <Sparkles className="w-4 h-4 text-rose-400" /> AI-Powered 5D Compatibility & Hobbies Matching
           </motion.div>
 
           <motion.h1

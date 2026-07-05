@@ -140,7 +140,7 @@ export const ProfilePage: React.FC = () => {
         {/* Selected Hobbies */}
         {profile?.interests?.length > 0 && (
           <div className="pt-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Selected World Hobbies</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Selected Hobbies</span>
             <div className="flex flex-wrap gap-1.5">
               {profile.interests.map((item: any) => (
                 <span
