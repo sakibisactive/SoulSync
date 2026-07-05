@@ -11,16 +11,6 @@ import { seedQuestions } from './seeders/questionSeeder.js';
 import { seedInterests } from './seeders/interestSeeder.js';
 import { seedAdminUser } from './seeders/adminSeeder.js';
 
-// Route Imports
-import authRoutes from './routes/authRoutes.js';
-import profileRoutes from './routes/profileRoutes.js';
-import questionRoutes from './routes/questionRoutes.js';
-import matchRoutes from './routes/matchRoutes.js';
-import likeRoutes from './routes/likeRoutes.js';
-import messageRoutes from './routes/messageRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-
 dotenv.config();
 
 const app = express();
@@ -33,7 +23,7 @@ initSocket(server);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || '*',
     credentials: true,
   })
 );
@@ -42,6 +32,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API Endpoints Mounting
+import authRoutes from './routes/authRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import questionRoutes from './routes/questionRoutes.js';
+import matchRoutes from './routes/matchRoutes.js';
+import likeRoutes from './routes/likeRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/meta', questionRoutes);
@@ -65,14 +64,19 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Connect DB, Run Seeders, and Start Server
-connectDB().then(async () => {
-  await seedAdminUser();
-  await seedQuestions();
-  await seedInterests();
-
-  server.listen(PORT, () => {
-    console.log(`[Server] SoulSync Backend running on http://localhost:${PORT}`);
+// Start Server HTTP Listener Immediately for Render Health Checks
+server.listen(PORT, () => {
+  console.log(`[Server] SoulSync Backend running on port ${PORT}`);
+  
+  // Asynchronously connect database and run seeders
+  connectDB().then(async () => {
+    try {
+      await seedAdminUser();
+      await seedQuestions();
+      await seedInterests();
+    } catch (e: any) {
+      console.error(`[Seeder Error]: ${e.message}`);
+    }
   });
 });
 
