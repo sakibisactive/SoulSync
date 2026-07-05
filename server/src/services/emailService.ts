@@ -6,26 +6,58 @@ export const sendEmail = async (options: {
   text?: string;
   html?: string;
 }): Promise<boolean> => {
+  const apiKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS;
+
+  // 1. Try Brevo HTTPS REST API (Port 443 - Immune to cloud SMTP port blocks on Render)
+  if (apiKey && (apiKey.startsWith('xkeysib-') || apiKey.startsWith('xsmtpsib-'))) {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': apiKey,
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'SoulSync Support',
+            email: process.env.SMTP_USER || 'b0e13d001@smtp-brevo.com',
+          },
+          to: [{ email: options.to }],
+          subject: options.subject,
+          htmlContent: options.html || `<p>${options.text}</p>`,
+          textContent: options.text,
+        }),
+      });
+
+      if (response.ok) {
+        console.log(`[Brevo HTTPS API] Email successfully sent to ${options.to}`);
+        return true;
+      }
+
+      const errText = await response.text();
+      console.warn(`[Brevo HTTPS API Warning] ${response.status}: ${errText}. Attempting SMTP fallback...`);
+    } catch (apiError: any) {
+      console.warn(`[Brevo HTTPS API Error] ${apiError.message}. Attempting SMTP fallback...`);
+    }
+  }
+
+  // 2. Fallback to Nodemailer SMTP Port 465 (SSL) / 2525
   try {
     const host = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
-    const port = parseInt(process.env.SMTP_PORT || '587', 10);
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
     if (user && pass) {
+      const port = parseInt(process.env.SMTP_PORT || '465', 10);
       const transporter = nodemailer.createTransport({
         host,
         port,
-        secure: port === 465, // true for 465, false for 587
-        auth: {
-          user,
-          pass,
-        },
-        connectionTimeout: 8000, // 8 second max connection timeout
-        socketTimeout: 8000,
-        tls: {
-          rejectUnauthorized: false,
-        },
+        secure: port === 465,
+        auth: { user, pass },
+        connectionTimeout: 5000,
+        socketTimeout: 5000,
+        tls: { rejectUnauthorized: false },
       });
 
       await transporter.sendMail({
@@ -36,12 +68,11 @@ export const sendEmail = async (options: {
         html: options.html,
       });
 
-      console.log(`[Brevo Email Service] Email successfully sent to ${options.to}`);
+      console.log(`[Brevo SMTP Service] Email successfully sent to ${options.to}`);
       return true;
     }
 
     console.log(`[Email Simulation] To: ${options.to} | Subject: ${options.subject}`);
-    console.log(`[Email Content]:\n${options.text || options.html}`);
     return true;
   } catch (error: any) {
     console.error(`[Email Error] Failed to send email to ${options.to}: ${error.message}`);
