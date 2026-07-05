@@ -20,7 +20,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     if (user) {
-      const newSocket = io(window.location.origin, {
+      const serverUrl = (import.meta as any).env?.VITE_API_URL || window.location.origin;
+      const newSocket = io(serverUrl, {
         transports: ['websocket', 'polling'],
       });
 
