@@ -92,7 +92,10 @@ export const discoverUsers = async (req: AuthRequest, res: Response, next: NextF
 
     // Sorting
     if (sortBy === 'newest') {
-      results.sort((a, b) => new Date(b.user.createdAt).getTime() - new Date(a.user.createdAt).getTime());
+      results.sort(
+        (a, b) =>
+          new Date((b.user as any).createdAt).getTime() - new Date((a.user as any).createdAt).getTime()
+      );
     } else if (sortBy === 'distance') {
       results.sort((a, b) => b.breakdown.location - a.breakdown.location);
     } else {
