@@ -53,12 +53,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       console.error(`[Background OTP Email Error]: ${e.message}`);
     });
 
-    // Return instant response to frontend with pendingToken (NO DB INSERTION YET)
+    // Return response to frontend (OTP only sent via Real Email)
     res.status(200).json({
       success: true,
       message: `6-digit OTP code sent to ${email}. Check inbox & spam folder!`,
       pendingToken,
-      otpCode, // Returned for testing & dev convenience
     });
   } catch (err: any) {
     next(err);
