@@ -42,29 +42,34 @@ export const Navbar: React.FC = () => {
             {/* Navigation Links */}
             {isAuthenticated ? (
               <div className="flex items-center gap-1 sm:gap-3">
-                <Link
-                  to="/discover"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/discover')
-                      ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Compass className="w-4 h-4 text-indigo-400" />
-                  <span className="hidden md:inline">Discover</span>
-                </Link>
+                {/* HIDE DISCOVER & TOP MATCHES FOR ADMIN USER ROLE */}
+                {user?.role !== 'Admin' && (
+                  <>
+                    <Link
+                      to="/discover"
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive('/discover')
+                          ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <Compass className="w-4 h-4 text-indigo-400" />
+                      <span className="hidden md:inline">Discover</span>
+                    </Link>
 
-                <Link
-                  to="/matches"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive('/matches')
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-rose-400" />
-                  <span className="hidden md:inline">Top Matches</span>
-                </Link>
+                    <Link
+                      to="/matches"
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive('/matches')
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-rose-400" />
+                      <span className="hidden md:inline">Top Matches</span>
+                    </Link>
+                  </>
+                )}
 
                 <Link
                   to="/likes"
@@ -105,13 +110,15 @@ export const Navbar: React.FC = () => {
                 )}
 
                 {/* VIP Upgrade Checkout Trigger */}
-                <button
-                  onClick={() => setShowSubscription(true)}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-bold flex items-center gap-1 shadow-lg shadow-amber-500/20 hover:opacity-90 transition-opacity"
-                >
-                  <Crown className="w-3.5 h-3.5 fill-white" />
-                  <span className="hidden sm:inline">VIP Membership</span>
-                </button>
+                {user?.role !== 'Admin' && (
+                  <button
+                    onClick={() => setShowSubscription(true)}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-bold flex items-center gap-1 shadow-lg shadow-amber-500/20 hover:opacity-90 transition-opacity"
+                  >
+                    <Crown className="w-3.5 h-3.5 fill-white" />
+                    <span className="hidden sm:inline">VIP Membership</span>
+                  </button>
+                )}
 
                 {/* Profile Link */}
                 <Link
