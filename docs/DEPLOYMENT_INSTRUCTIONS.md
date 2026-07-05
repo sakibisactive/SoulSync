@@ -30,7 +30,7 @@ Under the **Environment** tab, add the following key-value pairs:
 | `MONGO_URI` | `mongodb+srv://shahriarsakib1205_db_user:y0mzgXHLYhMVEhCp@cluster0.nyysnze.mongodb.net/partner_match?retryWrites=true&w=majority` | MongoDB Atlas Cloud Connection String |
 | `JWT_SECRET` | `super_secret_jwt_key_partner_match_2026` | JWT Token Secret |
 | `JWT_REFRESH_SECRET` | `super_secret_refresh_key_partner_match_2026` | JWT Refresh Secret |
-| `CLIENT_URL` | `https://soulsync.vercel.app` (Replace with your actual Vercel URL) | CORS Origin |
+| `CLIENT_URL` | `https://soulsyncbd.vercel.app` (Or `*` for unrestricted CORS) | CORS Origin |
 | `SMTP_HOST` | `smtp-relay.brevo.com` | Brevo Host |
 | `SMTP_PORT` | `587` | Brevo Port |
 | `SMTP_USER` | `b0e13d001@smtp-brevo.com` | Brevo User |
