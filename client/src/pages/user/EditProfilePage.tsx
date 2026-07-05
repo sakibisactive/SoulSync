@@ -9,6 +9,7 @@ import {
   useAddPhotoMutation,
 } from '../../redux/services/profileApi';
 import { Save, Sparkles, CheckCircle2, Sliders, Image, ListChecks, Share2, Search, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const POPULAR_COUNTRIES = [
   'United States', 'United Kingdom', 'Canada', 'Australia', 'Bangladesh',
@@ -92,6 +93,7 @@ export const EditProfilePage: React.FC = () => {
   // Interests state & Search
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const [hobbySearch, setHobbySearch] = useState('');
+  const [congratsModal, setCongratsModal] = useState({ show: false, percentage: 0 });
 
   // Photo URL input state
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
@@ -220,8 +222,11 @@ export const EditProfilePage: React.FC = () => {
           pets: pets || undefined,
         },
       }).unwrap();
-      setSavedSuccessMessage('Profile details & lifestyle choices saved!');
-      setTimeout(() => setSavedSuccessMessage(''), 3000);
+      const currentPct = calculateLiveCompletion();
+      setCongratsModal({ show: true, percentage: currentPct });
+      setTimeout(() => {
+        setCongratsModal({ show: false, percentage: 0 });
+      }, 2000);
       refetchMe();
     } catch (err) {}
   };
@@ -605,9 +610,9 @@ export const EditProfilePage: React.FC = () => {
 
           <button
             type="submit"
-            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg"
+            className="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg tracking-wider transition-all transform hover:scale-105"
           >
-            <Save className="w-4 h-4" /> Save Basic Info & Lifestyle
+            <Save className="w-4 h-4" /> SAVE
           </button>
         </form>
       )}
@@ -814,6 +819,44 @@ export const EditProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 2-Second Auto-Closing Congratulations Modal */}
+      <AnimatePresence>
+        {congratsModal.show && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              className="glass-panel p-8 rounded-3xl border border-indigo-500/50 max-w-sm w-full text-center space-y-4 shadow-2xl bg-gradient-to-b from-slate-900 via-indigo-950/90 to-slate-950 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-500 animate-pulse" />
+              
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600 mx-auto flex items-center justify-center text-white shadow-xl shadow-rose-500/30 animate-bounce">
+                <Sparkles className="w-8 h-8 fill-white" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-2xl font-extrabold text-white font-outfit tracking-tight">
+                  🎉 Congratulations!
+                </h3>
+                <p className="text-sm font-semibold text-slate-200">
+                  Your profile completion is now{' '}
+                  <span className="text-indigo-400 font-extrabold text-xl">
+                    {congratsModal.percentage}%
+                  </span>!
+                </p>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {congratsModal.percentage === 100
+                  ? '🚀 You have reached 100%! Full candidate matching is unlocked.'
+                  : 'Great progress! Complete remaining fields to unlock candidate discovery.'}
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
