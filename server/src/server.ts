@@ -51,6 +51,19 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Root Welcome Route
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send(`
+    <div style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #0f172a; color: #ffffff; min-height: 100vh;">
+      <h1 style="color: #f43f5e; font-size: 3rem; margin-bottom: 10px;">❤️ SoulSync Backend API</h1>
+      <p style="color: #94a3b8; font-size: 1.2rem;">MERN Partner Matching & 5D Compatibility Algorithm Server is Live!</p>
+      <div style="margin-top: 30px;">
+        <a href="/api/health" style="background-color: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Check API Health Status (/api/health)</a>
+      </div>
+    </div>
+  `);
+});
+
 // Health Check API
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
