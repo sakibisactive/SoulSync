@@ -14,7 +14,7 @@ export const RegisterPage: React.FC = () => {
   const [age, setAge] = useState(24);
   const [otpCode, setOtpCode] = useState('');
 
-  const [registeredUserData, setRegisteredUserData] = useState<any>(null);
+  const [pendingToken, setPendingToken] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successInfo, setSuccessInfo] = useState('');
 
@@ -29,8 +29,8 @@ export const RegisterPage: React.FC = () => {
     setErrorMessage('');
     try {
       const res = await registerUser({ name, email, password, gender, age }).unwrap();
-      setRegisteredUserData(res);
-      setSuccessInfo(`6-digit OTP sent to ${email}. Check your inbox!`);
+      setPendingToken(res.pendingToken);
+      setSuccessInfo(`6-digit OTP sent to ${email}. Check your email inbox!`);
       setStep('verify-otp');
     } catch (err: any) {
       setErrorMessage(err?.data?.message || 'Registration failed. Please try again.');
@@ -41,14 +41,14 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
     try {
-      await verifyEmail({ otpCode }).unwrap();
+      const res = await verifyEmail({ pendingToken, otpCode }).unwrap();
 
-      // Log user in and redirect to complete profile
-      if (registeredUserData) {
+      // ONLY NOW IS THE USER CREATED IN MONGODB & LOGGED IN
+      if (res.user && res.accessToken) {
         dispatch(
           setCredentials({
-            user: { ...registeredUserData.user, isVerified: true },
-            token: registeredUserData.accessToken,
+            user: res.user,
+            token: res.accessToken,
           })
         );
       }
@@ -223,7 +223,7 @@ export const RegisterPage: React.FC = () => {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4" /> Verify OTP & Setup Profile
+                  <CheckCircle2 className="w-4 h-4" /> Verify OTP & Create Account
                 </>
               )}
             </button>

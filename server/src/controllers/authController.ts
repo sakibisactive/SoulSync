@@ -21,6 +21,11 @@ const generateTokens = (id: string) => {
   return { accessToken, refreshToken };
 };
 
+/**
+ * Step 1: Initiate Registration
+ * Validates details, generates 6-digit OTP code, and emails it.
+ * NO USER IS CREATED IN MONGODB UNTIL OTP IS VERIFIED!
+ */
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { name, email, password, gender, age } = req.body;
@@ -34,20 +39,80 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     // Generate 6-digit OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: 'User',
-      isVerified: false,
-      verificationToken: otpCode,
+    // Create a temporary pending registration JWT token (valid for 15 mins)
+    const secret = process.env.JWT_SECRET || 'super_secret_jwt_key_partner_match_2026';
+    const pendingToken = jwt.sign(
+      { name, email, password, gender: gender || 'Male', age: age || 24, otpCode },
+      secret,
+      { expiresIn: '15m' }
+    );
+
+    // Dispatch 6-digit OTP via Brevo HTTPS REST API asynchronously in background
+    sendOTPEmail(email, name, otpCode).catch((e) => {
+      console.error(`[Background OTP Email Error]: ${e.message}`);
     });
 
-    // Create Initial Blank Profile (NO AUTOMATIC DEFAULTS)
+    // Return instant response to frontend with pendingToken (NO DB INSERTION YET)
+    res.status(200).json({
+      success: true,
+      message: `6-digit OTP code sent to ${email}. Enter code to complete registration.`,
+      pendingToken,
+      otpCode, // Returned for testing convenience
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+/**
+ * Step 2: Verify 6-Digit OTP & Create MongoDB Records
+ * Verifies OTP code from pendingToken, and ONLY THEN creates User & Profile in MongoDB!
+ */
+export const verifyOTP = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { pendingToken, otpCode } = req.body;
+
+    if (!pendingToken || !otpCode) {
+      res.status(400).json({ success: false, message: 'Pending registration token and 6-digit OTP are required.' });
+      return;
+    }
+
+    const secret = process.env.JWT_SECRET || 'super_secret_jwt_key_partner_match_2026';
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(pendingToken, secret);
+    } catch (err) {
+      res.status(400).json({ success: false, message: 'OTP token has expired or is invalid. Please register again.' });
+      return;
+    }
+
+    if (decoded.otpCode !== otpCode.toString().trim()) {
+      res.status(400).json({ success: false, message: 'Invalid 6-digit OTP verification code.' });
+      return;
+    }
+
+    // Double check email availability
+    const existingUser = await User.findOne({ email: decoded.email });
+    if (existingUser) {
+      res.status(400).json({ success: false, message: 'Account with this email has already been registered.' });
+      return;
+    }
+
+    // ONLY NOW CREATE USER DOCUMENT IN MONGODB
+    const user = await User.create({
+      name: decoded.name,
+      email: decoded.email,
+      password: decoded.password,
+      role: 'User',
+      isVerified: true, // Mark verified directly upon successful OTP entry
+    });
+
+    // ONLY NOW CREATE PROFILE DOCUMENT IN MONGODB
     await Profile.create({
       userId: user._id,
-      age: age || 24,
-      gender: gender || 'Male',
+      age: decoded.age || 24,
+      gender: decoded.gender || 'Male',
       bio: '',
       photos: [],
       lifestyle: {},
@@ -56,7 +121,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       preferences: {
         minAge: 18,
         maxAge: 50,
-        gender: [gender === 'Male' ? 'Female' : 'Male'],
+        gender: [decoded.gender === 'Male' ? 'Female' : 'Male'],
         maxDistanceKm: 100,
         relationshipType: ['Long-term'],
         interests: [],
@@ -65,18 +130,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const { accessToken, refreshToken } = generateTokens(user._id.toString());
 
-    // Dispatch 6-digit OTP via Brevo SMTP asynchronously in background
-    sendOTPEmail(user.email, user.name, otpCode).catch((e) => {
-      console.error(`[Background OTP Email Error]: ${e.message}`);
-    });
-
-    // Return instant response to user (< 50ms)
     res.status(201).json({
       success: true,
-      message: `Registration successful! 6-digit OTP code sent to ${user.email}`,
+      message: 'Email verified! Account and profile successfully created in MongoDB.',
       accessToken,
       refreshToken,
-      otpCode, // Returned for testing
       user: {
         id: user._id,
         name: user.name,
@@ -138,9 +196,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { token, otpCode } = req.body;
-    const codeToVerify = token || otpCode;
+    const { token, otpCode, pendingToken } = req.body;
+    if (pendingToken) {
+      return verifyOTP(req, res, next);
+    }
 
+    const codeToVerify = token || otpCode;
     const user = await User.findOne({ verificationToken: codeToVerify }).select('+verificationToken');
 
     if (!user) {
