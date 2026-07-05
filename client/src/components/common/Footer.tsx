@@ -18,7 +18,7 @@ export const Footer: React.FC = () => {
               <Sparkles className="w-4 h-4" /> About & Matching Engine
             </Link>
             <a
-              href="https://github.com/sakibisactive/Partner-Matching-Web-Platform.git"
+              href="https://github.com/sakibisactive/SoulSync.git"
               target="_blank"
               rel="noreferrer"
               className="hover:text-white transition-colors flex items-center gap-1"
